@@ -9,20 +9,35 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Inter',-apple-system,sans-serif;background:#F7F5F2;}</style>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',-apple-system,sans-serif;background:#F7F5F2;}
+@media(max-width:640px){
+  .sidebar{display:none!important;}
+  .main{margin-left:0!important;padding:20px!important;}
+  .bottom-nav{display:flex!important;}
+  .page-content{padding-bottom:80px;}
+}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #E5E3E0;z-index:100;justify-content:space-around;padding:8px 0;}
+.bottom-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 8px;font-size:10px;font-weight:600;color:#6B7280;min-width:52px;}
+.bottom-nav-item.active{color:#6B1E2E;}
+</style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
 const C={maroon:"#6B1E2E",plum:"#8B3A52",periwinkle:"#7B8EC8",offwhite:"#F7F5F2",surface:"#FFFFFF",text:"#1A1A1A",muted:"#6B7280",border:"#E5E3E0",success:"#2D7A4F",error:"#B91C1C"};
+
+// ── Storage (localStorage) ────────────────────────────────────────────────────
 const sk=(uid,key)=>`ct_${uid}_${key}`;
 function dbGet(uid,key){try{const v=localStorage.getItem(sk(uid,key));return v?JSON.parse(v):null;}catch{return null;}}
-function dbSet(uid,key,value){try{localStorage.setItem(sk(uid,key),JSON.stringify(value));}catch(e){}}
-function getAuthStore(){try{const v=localStorage.getItem("ct_auth_users");return v?JSON.parse(v):{};}catch{return{};}}
-function saveAuthStore(s){localStorage.setItem("ct_auth_users",JSON.stringify(s));}
-function getCurrentUser(){try{const v=localStorage.getItem("ct_auth_current");return v?JSON.parse(v):null;}catch{return null;}}
-function setCurrentUser(u){if(u)localStorage.setItem("ct_auth_current",JSON.stringify(u));else localStorage.removeItem("ct_auth_current");}
+function dbSet(uid,key,val){try{localStorage.setItem(sk(uid,key),JSON.stringify(val));}catch{}}
+function getAuthStore(){try{const v=localStorage.getItem("ct_auth");return v?JSON.parse(v):{};}catch{return{};}}
+function saveAuthStore(s){localStorage.setItem("ct_auth",JSON.stringify(s));}
+function getCurrentUser(){try{const v=localStorage.getItem("ct_user");return v?JSON.parse(v):null;}catch{return null;}}
+function setCurrentUser(u){if(u)localStorage.setItem("ct_user",JSON.stringify(u));else localStorage.removeItem("ct_user");}
 
+// ── Data ──────────────────────────────────────────────────────────────────────
 const CHECKLIST=[
   {id:1,label:"Choose your business structure",desc:"LLC, Sole Prop, S-Corp — know the difference before you file",category:"legal"},
   {id:2,label:"Register your business name",desc:"Check availability with your state's Secretary of State",category:"legal"},
@@ -37,11 +52,13 @@ const CHECKLIST=[
   {id:11,label:"Get business insurance",desc:"General liability at minimum — E&O if you offer professional services",category:"ops"},
   {id:12,label:"Build your online presence",desc:"Domain, website, and Google Business Profile",category:"brand"},
 ];
+
 const ENTITIES=[
   {id:"sole",name:"Sole Proprietorship",tagline:"Simplest structure. You are the business.",best:"Freelancers, side hustles, solo service providers just getting started",pros:["Zero setup cost or paperwork","Complete control over decisions","Simple taxes — report on your personal return","Easy to dissolve if needed"],cons:["No separation between you and the business","Personal assets at risk if sued","Harder to get business credit or loans","Less credibility with some clients"],tax:"Income reported on Schedule C of your personal tax return. Self-employment tax applies.",steps:["Start operating under your own name (no filing required)","File a DBA if using a business name","Get an EIN (optional but recommended)","Open a business bank account"]},
-  {id:"llc",name:"LLC",tagline:"Limited Liability Company. The sweet spot for most small businesses.",best:"Consultants, small business owners, service providers who want protection without the complexity of a corporation",pros:["Personal assets protected from business liability","Flexible tax options","Less paperwork than a corporation","More credible to clients and vendors"],cons:["Filing fees vary by state ($50-$500+)","Annual reports required in most states","Self-employment tax still applies","More setup than a sole prop"],tax:"Taxed as a sole prop by default (pass-through). Can elect S-Corp status for tax savings at higher income levels.",steps:["Choose and check your business name","File Articles of Organization with your state","Get your EIN from IRS.gov","Draft an operating agreement","Open a business bank account"]},
+  {id:"llc",name:"LLC",tagline:"Limited Liability Company. The sweet spot for most small businesses.",best:"Consultants, small business owners, service providers who want protection without the complexity of a corporation",pros:["Personal assets protected from business liability","Flexible tax options","Less paperwork than a corporation","More credible to clients and vendors"],cons:["Filing fees vary by state ($50–$500+)","Annual reports required in most states","Self-employment tax still applies","More setup than a sole prop"],tax:"Taxed as a sole prop by default (pass-through). Can elect S-Corp status for tax savings at higher income levels.",steps:["Choose and check your business name","File Articles of Organization with your state","Get your EIN from IRS.gov","Draft an operating agreement","Open a business bank account"]},
   {id:"scorp",name:"S-Corporation",tagline:"Tax-efficient structure for established businesses with consistent revenue.",best:"Business owners making $50K+ in profit who want to reduce self-employment tax",pros:["Significant self-employment tax savings at higher income","Personal liability protection","Adds credibility and structure","Easier to bring on investors or partners"],cons:["Most complex to set up and maintain","Must pay yourself a reasonable salary","Stricter IRS requirements","Payroll setup required"],tax:"Salary portion subject to payroll tax. Remaining profit passes through without SE tax — this is where the savings come from.",steps:["Form an LLC or C-Corp first","File IRS Form 2553 to elect S-Corp status","Set up payroll for your salary","Open business accounts and keep detailed records"]},
 ];
+
 const RESOURCES=[
   {title:"IRS EIN Application",desc:"Apply for your EIN — free and instant online",link:"https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online",category:"Tax"},
   {title:"Nevada SOS — Business Registration",desc:"File your LLC or corporation with the Nevada Secretary of State",link:"https://sos.nv.gov/businesses/main/",category:"Legal"},
@@ -56,15 +73,18 @@ const RESOURCES=[
   {title:"Clerky — Legal Documents",desc:"Affordable legal document templates for founders and small business owners",link:"https://www.clerky.com",category:"Legal"},
   {title:"QuickBooks Self-Employed",desc:"Track income, expenses, and quarterly taxes in one place",link:"https://quickbooks.intuit.com/self-employed/",category:"Finance"},
 ];
+
 const APPOINTMENTS={"Mon Jun 16":["9:00 AM","10:30 AM","2:00 PM"],"Tue Jun 17":["11:00 AM","1:00 PM","3:30 PM"],"Wed Jun 18":["9:00 AM","12:00 PM"],"Thu Jun 19":["10:00 AM","2:00 PM","4:00 PM"],"Fri Jun 20":["9:30 AM","11:00 AM"]};
 const SERVICE_TYPES=["Business Consultation","LLC Formation Assistance","Document Preparation","Notary Services","HR Compliance Review"];
-const NAV_GUEST=[{id:"home",label:"Home"},{id:"entities",label:"Entity Types"},{id:"resources",label:"Resources"}];
-const NAV_AUTH=[{id:"home",label:"Dashboard"},{id:"checklist",label:"Startup Checklist"},{id:"entities",label:"Entity Types"},{id:"vault",label:"Document Vault"},{id:"appointments",label:"Book Appointment"},{id:"resources",label:"Resources"}];
 
+const NAV_GUEST=[{id:"home",label:"Home",icon:"H"},{id:"entities",label:"Entity Types",icon:"E"},{id:"resources",label:"Resources",icon:"R"}];
+const NAV_AUTH=[{id:"home",label:"Dashboard",icon:"D"},{id:"checklist",label:"Checklist",icon:"C"},{id:"entities",label:"Entities",icon:"E"},{id:"vault",label:"Vault",icon:"V"},{id:"appointments",label:"Book",icon:"B"},{id:"resources",label:"Resources",icon:"R"}];
+
+// ── Styles ────────────────────────────────────────────────────────────────────
 const S={
   fullCenter:{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",backgroundColor:C.offwhite,padding:"20px"},
   app:{fontFamily:"'Inter',-apple-system,sans-serif",backgroundColor:C.offwhite,minHeight:"100vh",display:"flex",color:C.text},
-  sidebar:{width:"220px",backgroundColor:C.surface,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",flexShrink:0,position:"fixed",height:"100vh",overflowY:"auto"},
+  sidebar:{width:"220px",backgroundColor:C.surface,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",position:"fixed",height:"100vh",overflowY:"auto"},
   main:{marginLeft:"220px",flex:1,padding:"36px 40px",maxWidth:"860px"},
   logoArea:{padding:"24px 20px 18px",borderBottom:`1px solid ${C.border}`},
   logoText:{fontSize:"14px",fontWeight:"800",letterSpacing:"0.08em",color:C.maroon,textTransform:"uppercase"},
@@ -104,42 +124,44 @@ const S={
   authCard:{backgroundColor:C.surface,borderRadius:"16px",border:`1px solid ${C.border}`,padding:"36px",width:"100%",maxWidth:"400px",boxShadow:"0 4px 24px rgba(0,0,0,0.06)"},
   authLogo:{fontSize:"12px",fontWeight:"800",letterSpacing:"0.1em",color:C.maroon,textTransform:"uppercase",marginBottom:"3px"},
   authSub:{fontSize:"12px",color:C.muted,marginBottom:"24px"},
-  authTitle:{fontSize:"21px",fontWeight:"800",marginBottom:"6px",letterSpacing:"-0.02em"},
+  authTitle:{fontSize:"21px",fontWeight:"800",marginBottom:"16px",letterSpacing:"-0.02em"},
   authSwitch:{fontSize:"13px",color:C.muted,marginTop:"14px",textAlign:"center"},
   authLink:{color:C.periwinkle,cursor:"pointer",fontWeight:"600"},
 };
 
 const {useState,useEffect}=React;
 
+// ── Google Logo ───────────────────────────────────────────────────────────────
 function GoogleLogo(){return(<svg width="15" height="15" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>);}
 
+// ── Auth Screen ───────────────────────────────────────────────────────────────
 function AuthScreen({onLogin,onGuest}){
   const [mode,setMode]=useState("login");
   const [name,setName]=useState("");
   const [email,setEmail]=useState("");
-  const [password,setPassword]=useState("");
+  const [pw,setPw]=useState("");
   const [error,setError]=useState("");
-  const handleSubmit=()=>{
+  const submit=()=>{
     setError("");
     const store=getAuthStore();
     if(mode==="signup"){
       if(!name.trim()){setError("Please enter your name.");return;}
       if(store[email]){setError("An account with this email already exists.");return;}
-      if(password.length<6){setError("Password must be at least 6 characters.");return;}
-      const user={uid:`u_${Date.now()}`,name:name.trim(),email,provider:"email"};
-      store[email]={...user,password};saveAuthStore(store);setCurrentUser(user);onLogin(user);
+      if(pw.length<6){setError("Password must be at least 6 characters.");return;}
+      const u={uid:`u_${Date.now()}`,name:name.trim(),email,provider:"email"};
+      store[email]={...u,pw};saveAuthStore(store);setCurrentUser(u);onLogin(u);
     }else{
-      const record=store[email];
-      if(!record||record.password!==password){setError("Incorrect email or password.");return;}
-      const user={uid:record.uid,name:record.name,email:record.email,provider:"email"};
-      setCurrentUser(user);onLogin(user);
+      const r=store[email];
+      if(!r||r.pw!==pw){setError("Incorrect email or password.");return;}
+      const u={uid:r.uid,name:r.name,email:r.email,provider:"email"};
+      setCurrentUser(u);onLogin(u);
     }
   };
-  const handleGoogle=()=>{
+  const google=()=>{
     const store=getAuthStore();
-    const fakeEmail=`google_${Date.now()}@gmail.demo`;
-    const user={uid:`g_${Date.now()}`,name:"Google User",email:fakeEmail,provider:"google"};
-    store[fakeEmail]={...user,password:null};saveAuthStore(store);setCurrentUser(user);onLogin(user);
+    const fe=`g_${Date.now()}@gmail.demo`;
+    const u={uid:`g_${Date.now()}`,name:"Google User",email:fe,provider:"google"};
+    store[fe]={...u,pw:null};saveAuthStore(store);setCurrentUser(u);onLogin(u);
   };
   return(
     <div style={S.fullCenter}>
@@ -150,26 +172,25 @@ function AuthScreen({onLogin,onGuest}){
         {error&&<div style={S.errorText}>{error}</div>}
         {mode==="signup"&&<input style={S.input} placeholder="Full name" value={name} onChange={e=>setName(e.target.value)}/>}
         <input style={S.input} placeholder="Email address" value={email} onChange={e=>setEmail(e.target.value)} type="email"/>
-        <input style={S.input} placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} type="password"/>
-        <button style={{...S.btn(),width:"100%",marginBottom:"4px"}} onClick={handleSubmit}>
-          {mode==="login"?"Sign in":"Create account"}
-        </button>
+        <input style={S.input} placeholder="Password" value={pw} onChange={e=>setPw(e.target.value)} type="password"/>
+        <button style={{...S.btn(),width:"100%",marginBottom:"4px"}} onClick={submit}>{mode==="login"?"Sign in":"Create account"}</button>
         <div style={S.divider}><div style={S.dividerLine}/><span style={S.dividerText}>or</span><div style={S.dividerLine}/></div>
-        <button style={{...S.btn("google"),width:"100%",marginBottom:"10px"}} onClick={handleGoogle}><GoogleLogo/> Continue with Google</button>
+        <button style={{...S.btn("google"),width:"100%",marginBottom:"10px"}} onClick={google}><GoogleLogo/> Continue with Google</button>
         <button style={{...S.btn("ghost"),width:"100%",fontSize:"13px",color:C.muted,textDecoration:"underline"}} onClick={onGuest}>Browse without an account</button>
         <div style={S.authSwitch}>
-          {mode==="login"?<>Don't have an account? <span style={S.authLink} onClick={()=>{setMode("signup");setError("");}}>Sign up</span></>
-          :<>Already have an account? <span style={S.authLink} onClick={()=>{setMode("login");setError("");}}>Sign in</span></>}
+          {mode==="login"?<>No account? <span style={S.authLink} onClick={()=>{setMode("signup");setError("");}}>Sign up</span></>
+          :<>Have an account? <span style={S.authLink} onClick={()=>{setMode("login");setError("");}}>Sign in</span></>}
         </div>
       </div>
     </div>
   );
 }
 
+// ── Entity Types ──────────────────────────────────────────────────────────────
 function EntityTypesPage(){
   const [open,setOpen]=useState(null);
   return(
-    <div>
+    <div className="page-content">
       <div style={S.pageHeader}><div style={S.pageTitle}>Business Entity Types</div><div style={S.pageSub}>Not sure which structure is right for you? Start here.</div></div>
       {ENTITIES.map(e=>(
         <div key={e.id} style={{...S.card,padding:0,overflow:"hidden"}}>
@@ -178,7 +199,7 @@ function EntityTypesPage(){
               <div style={{fontSize:"15px",fontWeight:"700",color:C.text}}>{e.name}</div>
               <div style={{fontSize:"13px",color:C.muted,marginTop:"3px"}}>{e.tagline}</div>
             </div>
-            <div style={{fontSize:"18px",color:C.muted,marginLeft:"12px",flexShrink:0,transform:open===e.id?"rotate(180deg)":"none",transition:"transform 0.2s ease"}}>v</div>
+            <div style={{fontSize:"14px",color:C.muted,marginLeft:"12px",flexShrink:0,transform:open===e.id?"rotate(180deg)":"none",transition:"transform 0.2s ease"}}>▼</div>
           </div>
           {open===e.id&&(
             <div style={{borderTop:`1px solid ${C.border}`,padding:"20px 22px"}}>
@@ -214,23 +235,22 @@ function EntityTypesPage(){
         </div>
       ))}
       <div style={{...S.card,backgroundColor:`${C.maroon}06`,border:`1px solid ${C.maroon}20`}}>
-        <div style={{fontSize:"13px",color:C.text,lineHeight:"1.7"}}><strong>Not sure which one is right for you?</strong> Most solo service providers start with an LLC for the liability protection. Book a consultation and we'll walk through it together.</div>
+        <div style={{fontSize:"13px",color:C.text,lineHeight:"1.7"}}><strong>Not sure which one is right for you?</strong> Most solo service providers start with an LLC for the liability protection. If you're making significant profit, an S-Corp election is usually the next move. Book a consultation and we'll walk through it together.</div>
       </div>
     </div>
   );
 }
 
+// ── Resources ─────────────────────────────────────────────────────────────────
 function ResourcesPage(){
   const [filter,setFilter]=useState("All");
-  const categories=["All",...Array.from(new Set(RESOURCES.map(r=>r.category)))];
+  const cats=["All",...Array.from(new Set(RESOURCES.map(r=>r.category)))];
   const visible=filter==="All"?RESOURCES:RESOURCES.filter(r=>r.category===filter);
   return(
-    <div>
+    <div className="page-content">
       <div style={S.pageHeader}><div style={S.pageTitle}>Resource Directory</div><div style={S.pageSub}>Curated tools and links for entrepreneurs at every stage.</div></div>
       <div style={{display:"flex",gap:"8px",flexWrap:"wrap",marginBottom:"18px"}}>
-        {categories.map(cat=>(
-          <button key={cat} style={{...S.btn("sm"),backgroundColor:filter===cat?C.maroon:"transparent",color:filter===cat?"#fff":C.muted,border:`1px solid ${filter===cat?C.maroon:C.border}`}} onClick={()=>setFilter(cat)}>{cat}</button>
-        ))}
+        {cats.map(cat=><button key={cat} style={{...S.btn("sm"),backgroundColor:filter===cat?C.maroon:"transparent",color:filter===cat?"#fff":C.muted,border:`1px solid ${filter===cat?C.maroon:C.border}`}} onClick={()=>setFilter(cat)}>{cat}</button>)}
       </div>
       <div style={S.card}>
         {visible.map((r,i)=>(
@@ -247,143 +267,161 @@ function ResourcesPage(){
   );
 }
 
+// ── Main App ──────────────────────────────────────────────────────────────────
 function App(){
   const [user,setUser]=useState(null);
   const [isGuest,setIsGuest]=useState(false);
-  const [authLoading,setAuthLoading]=useState(true);
-  const [activePage,setActivePage]=useState("home");
+  const [loading,setLoading]=useState(true);
+  const [page,setPage]=useState("home");
   const [checked,setChecked]=useState({});
-  const [vaultFiles,setVaultFiles]=useState([]);
-  const [appointments,setAppointments]=useState([]);
+  const [vault,setVault]=useState([]);
+  const [appts,setAppts]=useState([]);
   const [saveMsg,setSaveMsg]=useState("");
   const [selDate,setSelDate]=useState(null);
   const [selTime,setSelTime]=useState(null);
-  const [selService,setSelService]=useState("");
-  const [clientName,setClientName]=useState("");
-  const [clientEmail,setClientEmail]=useState("");
+  const [selSvc,setSelSvc]=useState("");
+  const [cName,setCName]=useState("");
+  const [cEmail,setCEmail]=useState("");
   const [booked,setBooked]=useState(false);
   const [uploadName,setUploadName]=useState("");
+  const [bpName,setBpName]=useState("");
+  const [bpIndustry,setBpIndustry]=useState("");
+  const [bpMission,setBpMission]=useState("");
+  const [bpTarget,setBpTarget]=useState("");
+  const [bpRevenue,setBpRevenue]=useState("");
+  const [bpGoal,setBpGoal]=useState("");
 
-  useEffect(()=>{
-    const u=getCurrentUser();
-    if(u)loadUserData(u);else setAuthLoading(false);
-  },[]);
+  useEffect(()=>{const u=getCurrentUser();if(u)load(u);else setLoading(false);},[]);
 
-  const loadUserData=(u)=>{
+  const load=(u)=>{
     setUser(u);setIsGuest(false);
     setChecked(dbGet(u.uid,"checklist")||{});
-    setVaultFiles(dbGet(u.uid,"vault")||[
+    setVault(dbGet(u.uid,"vault")||[
       {name:"LLC Operating Agreement Template.pdf",size:"248 KB",date:"Jun 5, 2026",tag:"Legal"},
       {name:"EIN Application Guide.pdf",size:"120 KB",date:"Jun 1, 2026",tag:"Tax"},
     ]);
-    setAppointments(dbGet(u.uid,"appointments")||[]);
-    setAuthLoading(false);
+    setAppts(dbGet(u.uid,"appts")||[]);
+    setLoading(false);
   };
 
-  const flashSave=(msg="Saved")=>{setSaveMsg(msg);setTimeout(()=>setSaveMsg(""),2000);};
-  const toggleCheck=(id)=>{const next={...checked,[id]:!checked[id]};setChecked(next);dbSet(user.uid,"checklist",next);flashSave("Progress saved");};
-  const addVaultFile=()=>{if(!uploadName.trim())return;const next=[...vaultFiles,{name:uploadName.trim(),size:"—",date:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),tag:"General"}];setVaultFiles(next);dbSet(user.uid,"vault",next);setUploadName("");flashSave("Document added");};
-  const removeVaultFile=(idx)=>{const next=vaultFiles.filter((_,i)=>i!==idx);setVaultFiles(next);dbSet(user.uid,"vault",next);flashSave("Document removed");};
-  const handleBook=()=>{if(!clientName||!clientEmail||!selDate||!selTime||!selService)return;const appt={id:Date.now(),name:clientName,email:clientEmail,service:selService,date:selDate,time:selTime};const next=[...appointments,appt];setAppointments(next);dbSet(user.uid,"appointments",next);setBooked(true);};
-  const resetBooking=()=>{setBooked(false);setClientName("");setClientEmail("");setSelDate(null);setSelTime(null);setSelService("");};
-  const handleLogout=()=>{setCurrentUser(null);setUser(null);setIsGuest(false);setChecked({});setVaultFiles([]);setAppointments([]);setActivePage("home");};
+  const flash=(msg="Saved")=>{setSaveMsg(msg);setTimeout(()=>setSaveMsg(""),2000);};
+  const toggleCheck=(id)=>{const n={...checked,[id]:!checked[id]};setChecked(n);dbSet(user.uid,"checklist",n);flash("Progress saved");};
+  const addFile=()=>{if(!uploadName.trim())return;const n=[...vault,{name:uploadName.trim(),size:"—",date:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),tag:"General"}];setVault(n);dbSet(user.uid,"vault",n);setUploadName("");flash("Document added");};
+  const removeFile=(i)=>{const n=vault.filter((_,j)=>j!==i);setVault(n);dbSet(user.uid,"vault",n);flash("Removed");};
+  const book=()=>{if(!cName||!cEmail||!selDate||!selTime||!selSvc)return;const a={id:Date.now(),name:cName,email:cEmail,service:selSvc,date:selDate,time:selTime};const n=[...appts,a];setAppts(n);dbSet(user.uid,"appts",n);setBooked(true);};
+  const resetBook=()=>{setBooked(false);setCName("");setCEmail("");setSelDate(null);setSelTime(null);setSelSvc("");};
+  const logout=()=>{setCurrentUser(null);setUser(null);setIsGuest(false);setChecked({});setVault([]);setAppts([]);setPage("home");};
 
-  const completedCount=Object.values(checked).filter(Boolean).length;
-  const pct=Math.round((completedCount/CHECKLIST.length)*100);
-  const navItems=(user&&!isGuest)?NAV_AUTH:NAV_GUEST;
-  const authOnlyPages=["checklist","vault","appointments"];
-  const pageToShow=(isGuest&&authOnlyPages.includes(activePage))?"locked":activePage;
+  const done=Object.values(checked).filter(Boolean).length;
+  const pct=Math.round((done/CHECKLIST.length)*100);
+  const nav=(user&&!isGuest)?NAV_AUTH:NAV_GUEST;
+  const authOnly=["checklist","vault","appointments","bizplan"];
+  const show=(isGuest&&authOnly.includes(page))?"locked":page;
 
-  if(authLoading)return <div style={S.fullCenter}><div style={{color:C.muted,fontSize:"14px"}}>Loading...</div></div>;
-  if(!user&&!isGuest)return <AuthScreen onLogin={loadUserData} onGuest={()=>{setIsGuest(true);setActivePage("home");setAuthLoading(false);}}/>;
+  if(loading)return <div style={S.fullCenter}><div style={{color:C.muted,fontSize:"14px"}}>Loading...</div></div>;
+  if(!user&&!isGuest)return <AuthScreen onLogin={load} onGuest={()=>{setIsGuest(true);setPage("home");setLoading(false);}}/>;
 
   return(
     <div style={S.app}>
-      <div style={S.sidebar}>
+      {/* Sidebar */}
+      <div style={S.sidebar} className="sidebar">
         <div style={S.logoArea}>
           <div style={S.logoText}>CamTrust</div>
           <div style={S.logoSub}>Connect Portal</div>
         </div>
         <div style={S.navSection}>
           <div style={S.navLabel}>Menu</div>
-          {navItems.map(item=>(
-            <div key={item.id} style={S.navItem(activePage===item.id)} onClick={()=>setActivePage(item.id)}>{item.label}</div>
-          ))}
+          {nav.map(item=><div key={item.id} style={S.navItem(page===item.id)} onClick={()=>setPage(item.id)}>{item.label}</div>)}
+          {(user&&!isGuest)&&<div style={S.navItem(page==="bizplan")} onClick={()=>setPage("bizplan")}>Business Plan</div>}
         </div>
         <div style={S.userBar}>
-          {user?(
-            <>
-              <div style={S.userName}>{user.name}</div>
-              <div style={S.userEmail}>{user.email}</div>
-              <button style={{...S.btn("ghost"),marginTop:"10px",padding:"5px 0",fontSize:"12px",color:C.muted}} onClick={handleLogout}>Sign out</button>
-            </>
-          ):(
-            <>
-              <div style={{fontSize:"12px",color:C.muted,marginBottom:"8px"}}>Browsing as guest</div>
-              <button style={{...S.btn("outline"),fontSize:"12px",padding:"7px 12px"}} onClick={()=>{setIsGuest(false);setActivePage("home");}}>Sign in</button>
-            </>
-          )}
+          {user?(<>
+            <div style={S.userName}>{user.name}</div>
+            <div style={S.userEmail}>{user.email}</div>
+            <button style={{...S.btn("ghost"),marginTop:"10px",padding:"5px 0",fontSize:"12px",color:C.muted}} onClick={logout}>Sign out</button>
+          </>):(<>
+            <div style={{fontSize:"12px",color:C.muted,marginBottom:"8px"}}>Browsing as guest</div>
+            <button style={{...S.btn("outline"),fontSize:"12px",padding:"7px 12px"}} onClick={()=>{setIsGuest(false);setPage("home");}}>Sign in</button>
+          </>)}
         </div>
       </div>
 
-      <div style={S.main}>
-        {saveMsg&&<div style={{position:"fixed",top:"16px",right:"24px",backgroundColor:C.surface,border:`1px solid ${C.border}`,borderRadius:"8px",padding:"8px 14px",fontSize:"13px",color:C.success,zIndex:100}}>+ {saveMsg}</div>}
+      {/* Mobile bottom nav */}
+      <div className="bottom-nav">
+        {nav.map(item=>(
+          <div key={item.id} className={`bottom-nav-item${page===item.id?" active":""}`} onClick={()=>setPage(item.id)}>
+            <span style={{fontSize:"16px"}}>{item.icon}</span>
+            <span>{item.label}</span>
+          </div>
+        ))}
+      </div>
 
-        {pageToShow==="locked"&&(
-          <div>
-            <div style={S.pageHeader}><div style={S.pageTitle}>Create a free account</div><div style={S.pageSub}>Sign up to save your progress, manage documents, and book appointments.</div></div>
+      {/* Main */}
+      <div style={S.main} className="main">
+        {saveMsg&&<div style={{position:"fixed",top:"16px",right:"24px",backgroundColor:C.surface,border:`1px solid ${C.border}`,borderRadius:"8px",padding:"8px 14px",fontSize:"13px",color:C.success,zIndex:200}}>+ {saveMsg}</div>}
+
+        {/* Locked */}
+        {show==="locked"&&(
+          <div className="page-content">
+            <div style={S.pageHeader}><div style={S.pageTitle}>Create a free account</div><div style={S.pageSub}>Sign up to access this feature.</div></div>
             <div style={{...S.card,textAlign:"center",padding:"48px 24px"}}>
               <div style={{fontSize:"15px",fontWeight:"600",marginBottom:"8px"}}>This feature requires an account</div>
-              <div style={{fontSize:"14px",color:C.muted,marginBottom:"24px",lineHeight:"1.6"}}>It's free and takes less than a minute.</div>
-              <button style={S.btn()} onClick={()=>{setIsGuest(false);setActivePage("home");}}>Create a free account</button>
+              <div style={{fontSize:"14px",color:C.muted,marginBottom:"24px",lineHeight:"1.6"}}>It's free and takes less than a minute. Your progress saves every time you come back.</div>
+              <button style={S.btn()} onClick={()=>{setIsGuest(false);setPage("home");}}>Create a free account</button>
             </div>
           </div>
         )}
 
-        {pageToShow==="home"&&(
-          <div>
+        {/* Dashboard */}
+        {show==="home"&&(
+          <div className="page-content">
             <div style={S.pageHeader}>
               <div style={S.pageTitle}>{user?`Hey, ${user.name.split(" ")[0]}`:"Welcome to CamTrust Connect"}</div>
               <div style={S.pageSub}>{user?"Here's where your business journey stands.":"Your small business resource hub."}</div>
             </div>
-            {user&&(
-              <>
-                <div style={S.grid2}>
-                  <div style={S.statCard}><div style={S.statNumber}>{completedCount}/{CHECKLIST.length}</div><div style={S.statLabel}>Checklist steps done</div></div>
-                  <div style={S.statCard}><div style={S.statNumber}>{vaultFiles.length}</div><div style={S.statLabel}>Documents stored</div></div>
+            {user&&(<>
+              <div style={S.grid2}>
+                <div style={S.statCard}><div style={S.statNumber}>{done}/{CHECKLIST.length}</div><div style={S.statLabel}>Checklist steps done</div></div>
+                <div style={S.statCard}><div style={S.statNumber}>{vault.length}</div><div style={S.statLabel}>Documents stored</div></div>
+              </div>
+              <div style={{...S.card,padding:"18px 22px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:"10px"}}>
+                  <span style={{fontSize:"13px",fontWeight:"600"}}>Startup Progress</span>
+                  <span style={{fontSize:"13px",color:C.periwinkle,fontWeight:"700"}}>{pct}%</span>
                 </div>
-                <div style={{...S.card,padding:"18px 22px"}}>
-                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:"10px"}}>
-                    <span style={{fontSize:"13px",fontWeight:"600"}}>Startup Progress</span>
-                    <span style={{fontSize:"13px",color:C.periwinkle,fontWeight:"700"}}>{pct}%</span>
-                  </div>
-                  <div style={S.progressTrack}><div style={S.progressBar(pct)}/></div>
+                <div style={S.progressTrack}><div style={S.progressBar(pct)}/></div>
+              </div>
+              {appts.length>0&&(
+                <div style={S.card}>
+                  <div style={S.cardTitle}>Upcoming Appointments</div>
+                  {appts.slice(-3).map(a=>(
+                    <div key={a.id} style={{padding:"10px 0",borderBottom:`1px solid ${C.border}`,fontSize:"14px"}}>
+                      <strong>{a.service}</strong><span style={{color:C.muted}}> · {a.date} at {a.time}</span>
+                    </div>
+                  ))}
                 </div>
-              </>
-            )}
+              )}
+            </>)}
             {!user&&(
               <div style={{...S.card,backgroundColor:`${C.maroon}06`,border:`1px solid ${C.maroon}20`,marginBottom:"14px"}}>
                 <div style={{fontSize:"14px",color:C.text,lineHeight:"1.7"}}>CamTrust Consulting Group supports entrepreneurs, notary clients, and small business owners with the tools and guidance to move with confidence.</div>
-                <button style={{...S.btn(),marginTop:"14px"}} onClick={()=>{setIsGuest(false);setActivePage("home");}}>Create a free account</button>
+                <button style={{...S.btn(),marginTop:"14px"}} onClick={()=>{setIsGuest(false);setPage("home");}}>Create a free account</button>
               </div>
             )}
             <div style={S.card}>
-              <div style={S.cardTitle}>Explore</div>
+              <div style={S.cardTitle}>Quick Access</div>
               <div style={{display:"flex",gap:"8px",flexWrap:"wrap"}}>
-                {navItems.filter(n=>n.id!=="home").map(item=>(
-                  <button key={item.id} style={S.btn("outline")} onClick={()=>setActivePage(item.id)}>{item.label}</button>
-                ))}
-                {isGuest&&["Startup Checklist","Document Vault","Book Appointment"].map(label=>(
-                  <button key={label} style={S.btn("outline")} onClick={()=>setActivePage(label==="Startup Checklist"?"checklist":label==="Document Vault"?"vault":"appointments")}>{label}</button>
-                ))}
+                {nav.filter(n=>n.id!=="home").map(item=><button key={item.id} style={S.btn("outline")} onClick={()=>setPage(item.id)}>{item.label}</button>)}
+                {(user&&!isGuest)&&<button style={S.btn("outline")} onClick={()=>setPage("bizplan")}>Business Plan</button>}
               </div>
             </div>
           </div>
         )}
 
-        {pageToShow==="checklist"&&(
-          <div>
-            <div style={S.pageHeader}><div style={S.pageTitle}>Business Startup Checklist</div><div style={S.pageSub}>{completedCount} of {CHECKLIST.length} steps complete — saves automatically.</div></div>
+        {/* Checklist */}
+        {show==="checklist"&&(
+          <div className="page-content">
+            <div style={S.pageHeader}><div style={S.pageTitle}>Business Startup Checklist</div><div style={S.pageSub}>{done} of {CHECKLIST.length} steps complete — saves automatically.</div></div>
             <div style={{...S.card,padding:"18px 22px"}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:"10px"}}>
                 <span style={{fontSize:"13px",fontWeight:"600"}}>Progress</span>
@@ -394,7 +432,7 @@ function App(){
             <div style={S.card}>
               {CHECKLIST.map((item,idx)=>(
                 <div key={item.id} style={S.checkRow(idx===CHECKLIST.length-1)} onClick={()=>toggleCheck(item.id)}>
-                  <div style={S.checkbox(checked[item.id])}>{checked[item.id]&&<span style={{color:"#fff",fontSize:"11px",fontWeight:"800"}}>+</span>}</div>
+                  <div style={S.checkbox(checked[item.id])}>{checked[item.id]&&<span style={{color:"#fff",fontSize:"11px",fontWeight:"800"}}>✓</span>}</div>
                   <div style={{flex:1}}>
                     <div style={{display:"flex",alignItems:"center",flexWrap:"wrap",gap:"6px"}}>
                       <span style={S.checkLabel(checked[item.id])}>{item.label}</span>
@@ -408,25 +446,27 @@ function App(){
           </div>
         )}
 
-        {pageToShow==="entities"&&<EntityTypesPage/>}
+        {/* Entity Types */}
+        {show==="entities"&&<EntityTypesPage/>}
 
-        {pageToShow==="vault"&&(
-          <div>
+        {/* Vault */}
+        {show==="vault"&&(
+          <div className="page-content">
             <div style={S.pageHeader}><div style={S.pageTitle}>Document Vault</div><div style={S.pageSub}>Your documents are saved to your account.</div></div>
             <div style={S.card}>
               <div style={S.cardTitle}>Add a Document</div>
               <input style={S.input} placeholder="Document name (e.g. Operating Agreement.pdf)" value={uploadName} onChange={e=>setUploadName(e.target.value)}/>
-              <button style={S.btn()} onClick={addVaultFile}>Add to Vault</button>
+              <button style={S.btn()} onClick={addFile}>Add to Vault</button>
             </div>
             <div style={S.card}>
-              <div style={S.cardTitle}>Your Documents ({vaultFiles.length})</div>
-              {vaultFiles.length===0?<div style={S.emptyState}><div style={{fontSize:"14px"}}>No documents yet. Add one above.</div></div>
-              :vaultFiles.map((f,i)=>(
+              <div style={S.cardTitle}>Your Documents ({vault.length})</div>
+              {vault.length===0?<div style={S.emptyState}><div style={{fontSize:"14px"}}>No documents yet. Add one above.</div></div>
+              :vault.map((f,i)=>(
                 <div key={i} style={S.vaultRow}>
                   <div><div style={{fontSize:"14px",fontWeight:"600"}}>{f.name}</div><div style={{fontSize:"12px",color:C.muted}}>{f.size} · Added {f.date}</div></div>
                   <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
                     <span style={S.tag("blue")}>{f.tag}</span>
-                    <button style={{...S.btn("ghost"),fontSize:"12px",padding:"4px 8px",color:C.error}} onClick={()=>removeVaultFile(i)}>Remove</button>
+                    <button style={{...S.btn("ghost"),fontSize:"12px",padding:"4px 8px",color:C.error}} onClick={()=>removeFile(i)}>Remove</button>
                   </div>
                 </div>
               ))}
@@ -434,22 +474,23 @@ function App(){
           </div>
         )}
 
-        {pageToShow==="appointments"&&(
-          <div>
+        {/* Appointments */}
+        {show==="appointments"&&(
+          <div className="page-content">
             <div style={S.pageHeader}><div style={S.pageTitle}>Book an Appointment</div><div style={S.pageSub}>Schedule time with CamTrust Consulting Group.</div></div>
             {booked?(
               <div style={{...S.card,textAlign:"center",padding:"48px 24px"}}>
                 <div style={{fontSize:"18px",fontWeight:"700",color:C.maroon,marginBottom:"8px"}}>Appointment Requested</div>
-                <div style={{fontSize:"14px",color:C.muted,lineHeight:"1.7"}}><strong>{clientName}</strong> — {selService}<br/>{selDate} at {selTime}<br/><br/>Confirmation will be sent to <strong>{clientEmail}</strong>.</div>
-                <button style={{...S.btn(),marginTop:"24px"}} onClick={resetBooking}>Book Another</button>
+                <div style={{fontSize:"14px",color:C.muted,lineHeight:"1.7"}}><strong>{cName}</strong> — {selSvc}<br/>{selDate} at {selTime}<br/><br/>Confirmation will be sent to <strong>{cEmail}</strong>.</div>
+                <button style={{...S.btn(),marginTop:"24px"}} onClick={resetBook}>Book Another</button>
               </div>
             ):(
               <>
                 <div style={S.card}>
                   <div style={S.cardTitle}>Your Information</div>
-                  <input style={S.input} placeholder="Full name" value={clientName} onChange={e=>setClientName(e.target.value)}/>
-                  <input style={S.input} placeholder="Email address" value={clientEmail} onChange={e=>setClientEmail(e.target.value)}/>
-                  <select style={S.select} value={selService} onChange={e=>setSelService(e.target.value)}>
+                  <input style={S.input} placeholder="Full name" value={cName} onChange={e=>setCName(e.target.value)}/>
+                  <input style={S.input} placeholder="Email address" value={cEmail} onChange={e=>setCEmail(e.target.value)}/>
+                  <select style={S.select} value={selSvc} onChange={e=>setSelSvc(e.target.value)}>
                     <option value="">Select a service...</option>
                     {SERVICE_TYPES.map(s=><option key={s} value={s}>{s}</option>)}
                   </select>
@@ -457,9 +498,7 @@ function App(){
                 <div style={S.card}>
                   <div style={S.cardTitle}>Select a Date</div>
                   <div style={{display:"flex",gap:"8px",flexWrap:"wrap"}}>
-                    {Object.keys(APPOINTMENTS).map(date=>(
-                      <div key={date} style={S.apptSlot(selDate===date)} onClick={()=>{setSelDate(date);setSelTime(null);}}>{date}</div>
-                    ))}
+                    {Object.keys(APPOINTMENTS).map(d=><div key={d} style={S.apptSlot(selDate===d)} onClick={()=>{setSelDate(d);setSelTime(null);}}>{d}</div>)}
                   </div>
                 </div>
                 {selDate&&(
@@ -470,23 +509,56 @@ function App(){
                     </div>
                   </div>
                 )}
-                {appointments.length>0&&(
+                {appts.length>0&&(
                   <div style={S.card}>
                     <div style={S.cardTitle}>Your Appointments</div>
-                    {appointments.map(a=>(
-                      <div key={a.id} style={{padding:"10px 0",borderBottom:`1px solid ${C.border}`,fontSize:"14px"}}>
-                        <strong>{a.service}</strong><span style={{color:C.muted}}> · {a.date} at {a.time}</span>
-                      </div>
-                    ))}
+                    {appts.map(a=><div key={a.id} style={{padding:"10px 0",borderBottom:`1px solid ${C.border}`,fontSize:"14px"}}><strong>{a.service}</strong><span style={{color:C.muted}}> · {a.date} at {a.time}</span></div>)}
                   </div>
                 )}
-                <button style={{...S.btn(),opacity:(clientName&&clientEmail&&selDate&&selTime&&selService)?1:0.4,cursor:(clientName&&clientEmail&&selDate&&selTime&&selService)?"pointer":"not-allowed"}} onClick={handleBook}>Confirm Appointment</button>
+                <button style={{...S.btn(),opacity:(cName&&cEmail&&selDate&&selTime&&selSvc)?1:0.4,cursor:(cName&&cEmail&&selDate&&selTime&&selSvc)?"pointer":"not-allowed"}} onClick={book}>Confirm Appointment</button>
               </>
             )}
           </div>
         )}
 
-        {pageToShow==="resources"&&<ResourcesPage/>}
+        {/* Resources */}
+        {show==="resources"&&<ResourcesPage/>}
+
+        {/* Business Plan Builder */}
+        {show==="bizplan"&&(
+          <div className="page-content">
+            <div style={S.pageHeader}><div style={S.pageTitle}>Business Plan Builder</div><div style={S.pageSub}>Fill in the sections below to build your one-page business plan.</div></div>
+            <div style={S.card}>
+              <div style={S.cardTitle}>Business Basics</div>
+              <label style={{fontSize:"12px",fontWeight:"600",color:C.muted,display:"block",marginBottom:"4px"}}>Business Name</label>
+              <input style={S.input} placeholder="e.g. CamTrust Consulting Group" value={bpName} onChange={e=>setBpName(e.target.value)}/>
+              <label style={{fontSize:"12px",fontWeight:"600",color:C.muted,display:"block",marginBottom:"4px"}}>Industry</label>
+              <input style={S.input} placeholder="e.g. HR Consulting / Notary Services" value={bpIndustry} onChange={e=>setBpIndustry(e.target.value)}/>
+              <label style={{fontSize:"12px",fontWeight:"600",color:C.muted,display:"block",marginBottom:"4px"}}>Mission Statement</label>
+              <input style={S.input} placeholder="We help small businesses..." value={bpMission} onChange={e=>setBpMission(e.target.value)}/>
+            </div>
+            <div style={S.card}>
+              <div style={S.cardTitle}>Market and Revenue</div>
+              <label style={{fontSize:"12px",fontWeight:"600",color:C.muted,display:"block",marginBottom:"4px"}}>Target Customer</label>
+              <input style={S.input} placeholder="e.g. Solo entrepreneurs and small business owners in Nevada" value={bpTarget} onChange={e=>setBpTarget(e.target.value)}/>
+              <label style={{fontSize:"12px",fontWeight:"600",color:C.muted,display:"block",marginBottom:"4px"}}>How You Make Money</label>
+              <input style={S.input} placeholder="e.g. Flat-rate consulting packages, notary services, document prep" value={bpRevenue} onChange={e=>setBpRevenue(e.target.value)}/>
+              <label style={{fontSize:"12px",fontWeight:"600",color:C.muted,display:"block",marginBottom:"4px"}}>90-Day Goal</label>
+              <input style={S.input} placeholder="e.g. Sign 5 paying clients, launch website, earn $3K/month" value={bpGoal} onChange={e=>setBpGoal(e.target.value)}/>
+            </div>
+            {(bpName||bpMission||bpTarget)&&(
+              <div style={{...S.card,backgroundColor:`${C.maroon}04`,border:`1px solid ${C.maroon}20`}}>
+                <div style={S.cardTitle}>Your One-Page Business Plan</div>
+                {bpName&&<div style={{marginBottom:"12px"}}><div style={{fontSize:"11px",fontWeight:"700",color:C.muted,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:"4px"}}>Business</div><div style={{fontSize:"14px",color:C.text}}>{bpName} {bpIndustry&&`· ${bpIndustry}`}</div></div>}
+                {bpMission&&<div style={{marginBottom:"12px"}}><div style={{fontSize:"11px",fontWeight:"700",color:C.muted,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:"4px"}}>Mission</div><div style={{fontSize:"14px",color:C.text}}>{bpMission}</div></div>}
+                {bpTarget&&<div style={{marginBottom:"12px"}}><div style={{fontSize:"11px",fontWeight:"700",color:C.muted,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:"4px"}}>Target Customer</div><div style={{fontSize:"14px",color:C.text}}>{bpTarget}</div></div>}
+                {bpRevenue&&<div style={{marginBottom:"12px"}}><div style={{fontSize:"11px",fontWeight:"700",color:C.muted,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:"4px"}}>Revenue Model</div><div style={{fontSize:"14px",color:C.text}}>{bpRevenue}</div></div>}
+                {bpGoal&&<div><div style={{fontSize:"11px",fontWeight:"700",color:C.muted,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:"4px"}}>90-Day Goal</div><div style={{fontSize:"14px",color:C.text}}>{bpGoal}</div></div>}
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
     </div>
   );
